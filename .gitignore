@@ -1,0 +1,5 @@
+.env
+.cache/
+result.json
+accuracy_report.json
+__pycache__/
