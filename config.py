@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 load_dotenv()
  
 BASE_DIR = Path(__file__).parent
-MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
+MODEL =os.getenv("GEMINI_MODEL", "gemini-3.8-flash")
 REQUEST_DELAY = float(os.getenv("REQUEST_DELAY", "5"))
 LAW_FILE = BASE_DIR / "laws" / "law_context.md"
  
