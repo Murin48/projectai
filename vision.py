@@ -15,8 +15,8 @@ def load_contract(uploaded_files) -> str:
         
         if file_extension in ["pdf"]:
             # ถ้าเป็น PDF ให้ใช้ pypdf ตามเดิม
-            from extract import read_pdf
-            all_text += "\n" + read_pdf(f)
+            extracted_text = response.text if (response and response.text) else ""
+            all_text += "\n" + str(extracted_text)
             
         elif file_extension in ["png", "jpg", "jpeg"]:
             # ถ้าเป็นรูปภาพ ให้ใช้ Gemini Vision ช่วยอ่านข้อความในรูป
