@@ -23,12 +23,17 @@ def load_contract(uploaded_files) -> str:
             image = Image.open(f)
             prompt = "ถอดข้อความทั้งหมดจากรูปภาพสัญญาเช่านี้ออกมาเป็นข้อความภาษาไทยอย่างถูกต้องและครบถ้วนที่สุด โดยคงลำดับข้อสัญญาเดิมไว้"
             
-            # เรียกใช้งานโมเดล Gemini เพื่ออ่านรูปภาพ
-            response = client.models.generate_content(
-                model=MODEL,
-                contents=[image, prompt]
-            )
-            extracted_text = response.text if response else ""
-            all_text += "\n" + extracted_text
+          response = None  # กำหนดค่าเริ่มต้นเป็น None ป้องกัน Error
+try:
+    response = client.models.generate_content(
+        model=MODEL,
+        contents=[image, prompt]
+    )
+except Exception as e:
+    print(f"เกิดข้อผิดพลาดในการเรียกโมเดล: {e}")
+
+# ตรวจสอบก่อนนำไปใช้งาน
+extracted_text = response.text if (response and hasattr(response, 'text') and response.text) else ""
+all_text += "\n" + str(extracted_text)
             
     return all_text
