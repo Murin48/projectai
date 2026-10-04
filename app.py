@@ -39,8 +39,17 @@ if f and st.button("ตรวจสัญญา", type="primary"):
  
     analysed = analyze_clauses(clauses, progress=on_progress)
     bar.empty()
+     analysed = analyze_clauses(clauses, progress=on_progress)
+    bar.empty()
+
+    # เก็บผลพร้อมข้อความข้อสัญญา ไว้ใน session_state
+    st.session_state["results"] = [
+        {**r, "clause": c} for r, c in zip(analysed, clauses)
+    ]
+
     with st.spinner("กำลังสรุปภาพรวมสัญญา..."):
         st.session_state["overview"] = summarize_contract(clauses)
+  
  
 results = st.session_state.get("results")
  
