@@ -53,8 +53,8 @@ FALLBACK = {
     "suggestion": "รันใหม่อีกครั้ง หรืออ่านข้อนี้ด้วยตัวเอง",
 }
 
-# โมเดลสำรองที่ลองสลับใช้เมื่อโมเดลหลักล่ม
-FALLBACK_MODELS = [m.strip() for m in os.getenv("GEMINI_FALLBACKS", "gemini-2.5-flash,gemini-2.5-flash-lite,gemini-flash-latest").split(",") if m.strip()]
+# กำหนดโมเดลสำรองสำหรับสลับใช้งาน
+FALLBACK_MODELS = [m.strip() for m in os.getenv("GEMINI_FALLBACKS", "gemini-3.5-flash,gemini-2.5-flash-lite,gemini-flash-latest").split(",") if m.strip()]
 MODELS = [MODEL] + [m for m in FALLBACK_MODELS if m != MODEL]
 
 
@@ -212,4 +212,3 @@ def analyze_clause(clause: str) -> dict:
 if __name__ == "__main__":
     demo = "ข้อ 5 ผู้เช่าไม่มีสิทธิ์ขอคืนเงินประกันในทุกกรณี หากย้ายออกก่อนครบสัญญา"
     print(json.dumps(analyze_clause(demo), ensure_ascii=False, indent=2))
-```[cite: 4]
