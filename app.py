@@ -27,29 +27,25 @@ if f and st.button("ตรวจสัญญา", type="primary"):
         st.error(f"อ่านไฟล์ไม่สำเร็จ: {e}")
         st.stop()
     clauses = split_clauses(text)
- 
+
     if not clauses:
         st.error("อ่านข้อความจากไฟล์ไม่ได้ (อาจเป็นไฟล์สแกน) ลองไฟล์ PDF ที่เลือกข้อความได้")
         st.stop()
- 
+
     bar = st.progress(0.0, text=f"กำลังวิเคราะห์ {len(clauses)} ข้อ...")
- 
+
     def on_progress(done, total):
         bar.progress(done / total if total else 1.0, text=f"วิเคราะห์แล้ว {done}/{total} ข้อ")
- 
+
     analysed = analyze_clauses(clauses, progress=on_progress)
     bar.empty()
-     analysed = analyze_clauses(clauses, progress=on_progress)
-    bar.empty()
 
-    # เก็บผลพร้อมข้อความข้อสัญญา ไว้ใน session_state
     st.session_state["results"] = [
         {**r, "clause": c} for r, c in zip(analysed, clauses)
     ]
 
     with st.spinner("กำลังสรุปภาพรวมสัญญา..."):
         st.session_state["overview"] = summarize_contract(clauses)
-  
  
 results = st.session_state.get("results")
  
