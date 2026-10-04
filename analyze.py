@@ -54,7 +54,7 @@ FALLBACK = {
 }
 
 # กำหนดโมเดลสำรองสำหรับสลับใช้งาน
-FALLBACK_MODELS = [m.strip() for m in os.getenv("GEMINI_FALLBACKS", "gemini-3.5-flash,gemini-2.5-flash-lite,gemini-flash-latest").split(",") if m.strip()]
+FALLBACK_MODELS = [m.strip() for m in os.getenv("GEMINI_FALLBACKS", "gemini-1.5-pro,gemini-1.5-flash,gemini-flash-latest").split(",") if m.strip()]
 MODELS = [MODEL] + [m for m in FALLBACK_MODELS if m != MODEL]
 
 
