@@ -54,7 +54,8 @@ FALLBACK = {
 }
  
 # โมเดลสำรองที่ลองสลับใช้เมื่อโมเดลหลักล่ม ตั้งได้ใน .env เช่น GEMINI_FALLBACKS=gemini-3.5-flash,gemini-3.5-flash-lite
-FALLBACK_MODELS = [m.strip() for m in os.getenv("GEMINI_FALLBACKS", "gemini-3.5-flash,gemini-3.5-flash-lite").split(",") if m.strip()]
+FALLBACK_MODELS = [m.strip() for m in os.getenv("GEMINI_FALLBACKS", "gemini-3.5-flash,gemini-3.5-flash-lite,gemini-2.5-flash,gemini-2.5-flash-lite,gemini-flash-latest").split(",") if m.strip()]
+```[cite: 4]
 MODELS = [MODEL] + [m for m in FALLBACK_MODELS if m != MODEL]
  
  
