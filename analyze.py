@@ -79,6 +79,7 @@ def _retry_delay(msg: str) -> int:
  
  
 def _call(system: str, contents: str, retries: int = 6):
+    # ปรับใช้ types.GenerateContentConfig ให้ถูกต้องตามโครงสร้าง SDK ล่าสุด
     config = types.GenerateContentConfig(
         system_instruction=system,
         response_mime_type="application/json",
@@ -92,8 +93,22 @@ def _call(system: str, contents: str, retries: int = 6):
             )
         model = live[attempt % len(live)]
         try:
-            resp = client.models.generate_content(model=model, contents=contents, config=config)
-            text = (resp.text or "").replace("```json", "").replace("```", "").strip()
+            # เรียกใช้งานผ่าน client.models.generate_content พร้อมระบุ config
+            resp = client.models.generate_content(
+                model=model,
+                contents=contents,
+                config=config
+            )
+            
+            # ดึงข้อความจาก response และทำความสะอาด JSON ให้ปลอดภัยยิ่งขึ้น
+            text = (getattr(resp, "text", "") or "").replace("```json", "").replace("```", "").strip()
+            
+            # ค้นหาตำแหน่งปีกกาเพื่อตัดข้อความส่วนเกินออกหากมีข้อความอื่นปะปน
+            start_idx = text.find("{")
+            end_idx = text.rfind("}")
+            if start_idx != -1 and end_idx != -1 and end_idx > start_idx:
+                text = text[start_idx:end_idx + 1]
+                
             data = json.loads(text)
             time.sleep(REQUEST_DELAY)  # กันชนโควตาต่อนาที
             return data
