@@ -10,8 +10,8 @@ from privacy import redact
 
 client = genai.Client()  # อ่านคีย์จากตัวแปร GEMINI_API_KEY
 
-BASE_SYSTEM = """คุณคือทนายความผู้เชี่ยวชาญด้านกฎหมายคุ้มครองผู้บริโภคและกฎหมายอสังหาริมทรัพย์ในประเทศไทย หน้าที่ของคุณคือวิเคราะห์ข้อความหรือรูปภาพสัญญาเช่าหอพัก/คอนโด เพื่อตรวจสอบข้อสัญญาที่ไม่เป็นธรรม ขัดต่อกฎหมาย หรือฝ่าฝืนประกาศ สคบ.
-วิเคราะห์ข้อสัญญาที่ได้รับ แล้วตอบเป็น JSON เท่านั้น ตามรูปแบบนี้:
+BASE_SYSTEM = """คุณเป็นผู้ช่วยอธิบายสัญญาเช่าหอพักในประเทศไทยให้ผู้เช่าที่ไม่ใช่นักกฎหมาย
+วิเคราะห์ "ข้อสัญญา" ที่ได้รับ แล้วตอบเป็น JSON เท่านั้น ตามรูปแบบนี้:
 {
   "summary": "สรุปข้อนี้ด้วยภาษาง่าย ๆ 1-2 ประโยค",
   "risk": "low | medium | high",
@@ -51,8 +51,8 @@ FALLBACK = {
     "suggestion": "รันใหม่อีกครั้ง หรืออ่านข้อนี้ด้วยตัวเอง",
 }
 
-# โมเดลสำรองที่ลองสลับใช้เมื่อโมเดลหลักล่ม ตั้งได้ใน .env เช่น GEMINI_FALLBACKS=gemini-1.5-pro,gemini-1.5-flash
-FALLBACK_MODELS = [m.strip() for m in os.getenv("GEMINI_FALLBACKS", "gemini-1.5-pro,gemini-1.5-flash").split(",") if m.strip()]
+# โมเดลสำรองที่ลองสลับใช้เมื่อโมเดลหลักล่ม ตั้งได้ใน .env เช่น GEMINI_FALLBACKS=gemini-3.5-flash,gemini-3.5-flash-lite
+FALLBACK_MODELS = [m.strip() for m in os.getenv("GEMINI_FALLBACKS", "gemini-3.5-flash,gemini-3.5-flash-lite").split(",") if m.strip()]
 MODELS = [MODEL] + [m for m in FALLBACK_MODELS if m != MODEL]
 
 
@@ -61,6 +61,7 @@ CACHE_FILE = BASE_DIR / ".cache" / "analysis.json"
 SYSTEM_HASH = hashlib.sha256(SYSTEM.encode("utf-8")).hexdigest()[:16]
 
 BATCH_NOTE = """รูปแบบการทำงานแบบหลายข้อ: ข้อมูลที่ได้รับเป็น JSON array ของ {"no": เลขลำดับ, "clause": ข้อความข้อสัญญา}
+ตอบให้กระชับ: summary 1 ประโยค, issues ไม่เกิน 3 ข้อ ข้อละไม่เกิน 2 ประโยค, suggestion ไม่เกิน 3 ประโยค
 ให้วิเคราะห์ทุกข้อ แล้วตอบเป็น JSON array เท่านั้น แต่ละรายการมีฟิลด์ "no" (ใช้เลขเดิม) ตามด้วย summary, risk, issues, law_ref, suggestion ตามรูปแบบข้างต้น ให้ครบทุกข้อตามลำดับเดิม"""
 BATCH_SYSTEM = SYSTEM + "\n\n" + BATCH_NOTE
 
@@ -122,11 +123,23 @@ def _retry_seconds(msg: str):
     return int(total) if total else None
 
 
+# งบ "การคิด" ของโมเดล ยิ่งน้อยยิ่งเร็ว (0 = ปิด) ตั้งใน .env ด้วย GEMINI_THINKING_BUDGET หรือใส่ default เพื่อใช้ค่าของ Google
+THINKING_BUDGET = os.getenv("GEMINI_THINKING_BUDGET", "0").strip()
+_thinking_enabled = THINKING_BUDGET not in ("", "default")
+
+
+def _make_config(system: str):
+    kwargs = dict(system_instruction=system, response_mime_type="application/json")
+    if _thinking_enabled:
+        try:
+            kwargs["thinking_config"] = types.ThinkingConfig(thinking_budget=int(THINKING_BUDGET))
+        except Exception:
+            pass
+    return types.GenerateContentConfig(**kwargs)
+
+
 def _call(system: str, contents: str, retries: int = 6):
-    config = types.GenerateContentConfig(
-        system_instruction=system,
-        response_mime_type="application/json",
-    )
+    global _thinking_enabled
     for attempt in range(retries):
         live = [m for m in MODELS if m not in _exhausted]
         if not live:
@@ -136,10 +149,11 @@ def _call(system: str, contents: str, retries: int = 6):
             )
         model = live[attempt % len(live)]
         try:
-            resp = client.models.generate_content(model=model, contents=contents, config=config)
+            t0 = time.time()
+            resp = client.models.generate_content(model=model, contents=contents, config=_make_config(system))
             text = (resp.text or "").replace("```json", "").replace("```", "").strip()
             data = json.loads(text)
-            time.sleep(REQUEST_DELAY)  # กันชนโควตาต่อนาที
+            print(f"⏱️  {model} ตอบใน {time.time() - t0:.1f} วินาที")
             return data
         except json.JSONDecodeError:
             print(f"⚠️  {model} ตอบกลับมาไม่ใช่ JSON ลองใหม่...")
@@ -148,6 +162,10 @@ def _call(system: str, contents: str, retries: int = 6):
             msg = str(e)
             print(f"⚠️  {model} ผิดพลาด (รหัส {code}): {msg[:600]}")
             low = msg.lower()
+            if code == 400 and "thinking" in low and _thinking_enabled:
+                print("ℹ️  โมเดลนี้ไม่รับการตั้งค่า thinking ปิดการตั้งค่านี้แล้วลองใหม่")
+                _thinking_enabled = False
+                continue
             if code == 429:
                 hint = _retry_seconds(msg)
                 if "perday" in low or "per day" in low or "limit: 0" in low or "quotavalue': '0'" in low or (hint is not None and hint > 120):
@@ -235,6 +253,8 @@ def analyze_clauses(clauses: list[str], progress=None, housing: str = "unknown")
                 results[n] = item
                 cache[_key(clauses[n], housing)] = item
         _save_cache(cache)
+        if start + CLAUSES_PER_REQUEST < len(todo):
+            time.sleep(REQUEST_DELAY)  # เว้นช่วงระหว่างชุด กันชนโควตาต่อนาที
         if progress:
             progress(min(start + CLAUSES_PER_REQUEST, len(todo)), len(todo))
 
