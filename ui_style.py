@@ -95,4 +95,36 @@ html, body, [class*="css"], .stApp, button, input, textarea {
 .lc-rule div div { color:#6B7280; font-size:.88rem; margin-top:2px; }
 .lc-note { background:#FFFBEB; border:1px solid #FDE68A; border-radius:12px; padding:12px 16px; color:#78350F; font-size:.88rem; margin:12px 0; }
 .lc-foot { color:#6B7280; font-size:.8rem; text-align:center; margin-top:28px; }
+
+/* ---------- มือถือ / หน้าจอแคบ ---------- */
+@media (max-width: 640px) {
+  .block-container { padding-left: .75rem !important; padding-right: .75rem !important; padding-top: .25rem !important; }
+  .stApp h2, .stApp h3 { font-size: 1.15rem !important; line-height: 1.4 !important; }
+  .lc-header { padding: 8px 2px 4px 2px; gap: 8px; }
+  .lc-logo { font-size: 1.25rem; }
+  .lc-badge { font-size: .7rem; padding: 3px 8px; }
+  .stTabs [data-baseweb="tab-list"] { gap: 2px; overflow-x: auto; flex-wrap: nowrap; }
+  .stTabs [data-baseweb="tab"] { height: 38px; padding: 0 10px; font-size: .82rem; white-space: nowrap; }
+  .lc-hero { padding: 20px 18px; border-radius: 18px; margin: 10px 0 14px 0; }
+  .lc-hero h1 { font-size: 1.35rem; line-height: 1.35; }
+  .lc-hero p { font-size: .88rem; margin-bottom: 12px; }
+  .lc-chip { display: block; margin: 0 0 8px 0; padding: 8px 12px; font-size: .8rem; border-radius: 12px; }
+  [data-testid="stFileUploaderDropzone"] { padding: 18px 12px; }
+  .lc-sample { min-height: 0; padding: 12px 14px; }
+  .lc-stats { gap: 8px; }
+  .lc-stat { flex: 1 1 calc(50% - 8px); min-width: 0; padding: 10px 12px; }
+  .lc-stat .n { font-size: 1.5rem; }
+  .lc-res summary { padding: 12px; font-size: .92rem; gap: 8px; flex-wrap: wrap; }
+  .lc-res .ttl { flex: 1 1 60%; min-width: 0; }
+  .lc-res .body { padding: 2px 14px 14px 14px; font-size: .9rem; }
+  .lc-calc { padding: 14px; }
+  .lc-row { flex-direction: column; gap: 2px; padding: 8px 0; border-bottom: 1px solid #EEF2F7; }
+  .lc-total { flex-direction: column; align-items: flex-start; gap: 6px; }
+  .lc-total .big { font-size: 1.6rem; }
+  .lc-help { padding: 14px; }
+  .lc-call { width: 100%; text-align: center; box-sizing: border-box; }
+  .lc-rule { flex-direction: column; gap: 8px; padding: 12px; }
+  .lc-note { font-size: .82rem; }
+  .lc-foot { font-size: .72rem; }
+}
 """
